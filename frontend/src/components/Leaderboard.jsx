@@ -1,16 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { api } from '../api';
 
-function Leaderboard() {
+const Leaderboard = forwardRef((props, ref) => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchLeaderboard();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchLeaderboard, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const fetchLeaderboard = async () => {
     try {
@@ -22,6 +15,18 @@ function Leaderboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLeaderboard();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchLeaderboard, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Expose refresh function to parent component
+  useImperativeHandle(ref, () => ({
+    refresh: fetchLeaderboard
+  }));
 
   const medals = ['🥇', '🥈', '🥉'];
   
@@ -107,6 +112,8 @@ function Leaderboard() {
       </div>
     </div>
   );
-}
+});
+
+Leaderboard.displayName = 'Leaderboard';
 
 export default Leaderboard;

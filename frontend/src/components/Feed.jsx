@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import Post from './Post';
 
-function Feed() {
+function Feed({ onUserAction }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
@@ -105,7 +105,7 @@ function Feed() {
         </div>
       ) : (
         posts.map((post) => (
-          <Post key={post.id} post={post} onUpdate={fetchPosts} />
+          <Post key={post.id} post={post} onUpdate={fetchPosts} onUserAction={onUserAction} />
         ))
       )}
     </div>
