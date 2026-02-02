@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from .models import Post, Comment, Like
 
 
@@ -7,7 +8,38 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'email']
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    """Serializer for user registration."""
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True, label="Confirm Password")
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'password2']
+
+    def validate(self, attrs):
+        """Validate that passwords match."""
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        
+        if User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError({"email": "A user with this email already exists."})
+        
+        return attrs
+
+    def create(self, validated_data):
+        """Create a new user."""
+        validated_data.pop('password2')
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -17,8 +49,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'content', 'author', 'post', 'parent', 'created', 'like_count', 'replies']
-        read_only_fields = ['created', 'like_count']
+        fields = ['id', 'content', 'author', 'post', 'parent', 'created', 'updated', 'like_count', 'replies']
+        read_only_fields = ['created', 'updated', 'like_count']
 
     def get_replies(self, obj):
         """
@@ -42,8 +74,8 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'content', 'author', 'created', 'like_count', 'comment_count']
-        read_only_fields = ['created', 'like_count']
+        fields = ['id', 'content', 'author', 'created', 'updated', 'like_count', 'comment_count']
+        read_only_fields = ['created', 'updated', 'like_count']
 
     def get_comment_count(self, obj):
         """Get total comment count for the post."""

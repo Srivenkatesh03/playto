@@ -9,6 +9,7 @@ class Post(models.Model):
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated = models.DateTimeField(auto_now=True, null=True, blank=True)
     like_count = models.IntegerField(default=0)  # Denormalized for performance
 
     class Meta:
@@ -34,6 +35,7 @@ class Comment(models.Model):
         related_name='replies'
     )
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated = models.DateTimeField(auto_now=True, null=True, blank=True)
     like_count = models.IntegerField(default=0)  # Denormalized for performance
 
     class Meta:

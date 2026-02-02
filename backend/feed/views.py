@@ -1,21 +1,23 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q, Sum, Case, When, IntegerField, F, Prefetch
 from django.utils import timezone
 from datetime import timedelta
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework import viewsets, status, generics
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 
 from .models import Post, Comment, Like
 from .serializers import (
     PostSerializer, PostDetailSerializer, CommentSerializer,
-    CommentCreateSerializer, LeaderboardSerializer
+    CommentCreateSerializer, LeaderboardSerializer, UserSerializer, RegisterSerializer
 )
+from .permissions import IsAuthorOrReadOnly
 
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -32,7 +34,7 @@ class PostViewSet(viewsets.ModelViewSet):
     """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [AllowAny]  # For development; use IsAuthenticatedOrReadOnly in production
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
@@ -64,28 +66,17 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        """Set the author to the current user or a default user."""
-        # For development, use first user or create one
-        user = User.objects.first()
-        if not user:
-            user = User.objects.create_user(username='testuser', password='testpass')
-        serializer.save(author=user)
+        """Set the author to the current authenticated user."""
+        serializer.save(author=self.request.user)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def like(self, request, pk=None):
         """
         Toggle like on a post with concurrency handling.
         Returns whether the post is now liked or unliked.
         """
         post = self.get_object()
-        
-        # For development, use first user
-        user = User.objects.first()
-        if not user:
-            return Response(
-                {'error': 'No users exist'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        user = request.user
         
         content_type = ContentType.objects.get_for_model(Post)
         
@@ -123,18 +114,11 @@ class PostViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_409_CONFLICT
             )
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def comments(self, request, pk=None):
         """Add a comment to a post."""
         post = self.get_object()
-        
-        # For development, use first user
-        user = User.objects.first()
-        if not user:
-            return Response(
-                {'error': 'No users exist'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        user = request.user
         
         serializer = CommentCreateSerializer(data=request.data)
         if serializer.is_valid():
@@ -147,24 +131,17 @@ class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet for Comment model."""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
 
     def get_queryset(self):
         """Optimize queryset with select_related for author."""
         return Comment.objects.select_related('author', 'post')
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def reply(self, request, pk=None):
         """Add a reply to a comment."""
         parent_comment = self.get_object()
-        
-        # For development, use first user
-        user = User.objects.first()
-        if not user:
-            return Response(
-                {'error': 'No users exist'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        user = request.user
         
         data = request.data.copy()
         data['post'] = parent_comment.post.id
@@ -176,21 +153,14 @@ class CommentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def like(self, request, pk=None):
         """
         Toggle like on a comment with concurrency handling.
         Returns whether the comment is now liked or unliked.
         """
         comment = self.get_object()
-        
-        # For development, use first user
-        user = User.objects.first()
-        if not user:
-            return Response(
-                {'error': 'No users exist'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        user = request.user
         
         content_type = ContentType.objects.get_for_model(Comment)
         
@@ -289,3 +259,87 @@ class LeaderboardViewSet(viewsets.ViewSet):
         ]
         
         return Response(result)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def csrf_token_view(request):
+    """
+    API endpoint to get CSRF token.
+    """
+    from django.middleware.csrf import get_token
+    return Response({'csrfToken': get_token(request)})
+
+
+class RegisterView(generics.CreateAPIView):
+    """
+    API endpoint for user registration.
+    """
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Create a new user and log them in."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        # Log the user in
+        login(request, user)
+        
+        return Response({
+            'user': UserSerializer(user).data,
+            'message': 'Registration successful'
+        }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    """
+    API endpoint for user login using Django's built-in authentication.
+    """
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    if not username or not password:
+        return Response(
+            {'error': 'Please provide both username and password'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    user = authenticate(request, username=username, password=password)
+    
+    if user is not None:
+        login(request, user)
+        return Response({
+            'user': UserSerializer(user).data,
+            'message': 'Login successful'
+        })
+    else:
+        return Response(
+            {'error': 'Invalid credentials'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    """
+    API endpoint for user logout.
+    """
+    logout(request)
+    return Response({'message': 'Logout successful'})
+
+
+class CurrentUserView(generics.RetrieveAPIView):
+    """
+    API endpoint to get the current authenticated user.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
