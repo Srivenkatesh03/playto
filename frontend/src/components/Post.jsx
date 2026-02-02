@@ -47,62 +47,62 @@ function Post({ post, detailed = false, onUpdate }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-4">
+    <div className="card-elevated p-4 md:p-6 mb-6 animate-fade-in hover:scale-[1.01] transition-all duration-300">
       {/* Post header */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
           {localPost.author.username[0].toUpperCase()}
         </div>
-        <div>
-          <div className="font-semibold text-gray-900">{localPost.author.username}</div>
-          <div className="text-sm text-gray-500">{new Date(localPost.created).toLocaleString()}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-gray-900 text-base md:text-lg break-anywhere">{localPost.author.username}</div>
+          <div className="text-xs md:text-sm text-gray-500">{new Date(localPost.created).toLocaleString()}</div>
         </div>
       </div>
 
       {/* Post content */}
-      <p className="text-gray-800 mb-4 text-lg">{localPost.content}</p>
+      <p className="text-gray-800 mb-4 text-base md:text-lg leading-relaxed break-anywhere">{localPost.content}</p>
 
       {/* Post actions */}
-      <div className="flex items-center gap-4 text-sm border-t border-gray-200 pt-3">
+      <div className="flex items-center gap-3 md:gap-4 text-sm border-t border-gray-200 pt-4 flex-wrap">
         <button
           onClick={handleLike}
           disabled={isLiking}
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:from-blue-100 hover:to-blue-200 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 font-semibold"
         >
-          <span className="text-xl">👍</span>
-          <span>{localPost.like_count} Likes</span>
+          <span className="text-xl md:text-2xl">👍</span>
+          <span className="text-sm md:text-base">{localPost.like_count} Likes</span>
         </button>
         
         <button
           onClick={() => setShowCommentForm(!showCommentForm)}
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-50 to-purple-100 text-purple-600 hover:from-purple-100 hover:to-purple-200 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 font-semibold"
         >
-          <span className="text-xl">💬</span>
-          <span>{localPost.comment_count || 0} Comments</span>
+          <span className="text-xl md:text-2xl">💬</span>
+          <span className="text-sm md:text-base">{localPost.comment_count || 0} Comments</span>
         </button>
       </div>
 
       {/* Comment form */}
       {showCommentForm && (
-        <form onSubmit={handleComment} className="mt-4 border-t border-gray-200 pt-4">
+        <form onSubmit={handleComment} className="mt-6 border-t border-gray-200 pt-6 animate-slide-up">
           <textarea
             value={commentContent}
             onChange={(e) => setCommentContent(e.target.value)}
             placeholder="Write a comment..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            rows="3"
+            className="input-modern resize-none text-sm md:text-base"
+            rows="4"
           />
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 md:gap-3 mt-3 flex-wrap">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="btn-primary text-sm md:text-base"
             >
               Post Comment
             </button>
             <button
               type="button"
               onClick={() => setShowCommentForm(false)}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              className="btn-outline text-sm md:text-base"
             >
               Cancel
             </button>
@@ -112,8 +112,11 @@ function Post({ post, detailed = false, onUpdate }) {
 
       {/* Comments section (only in detailed view) */}
       {detailed && localPost.comments && localPost.comments.length > 0 && (
-        <div className="mt-6 border-t border-gray-200 pt-4">
-          <h3 className="font-semibold text-gray-900 mb-4">Comments</h3>
+        <div className="mt-6 border-t-2 border-blue-200 pt-6">
+          <h3 className="font-bold text-gray-900 mb-5 text-lg md:text-xl flex items-center gap-2">
+            <span className="text-2xl">💭</span>
+            Comments
+          </h3>
           {localPost.comments.map((comment) => (
             <Comment
               key={comment.id}

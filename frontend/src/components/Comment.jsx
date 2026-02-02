@@ -39,41 +39,41 @@ function Comment({ comment, onCommentAdded }) {
   const hasReplies = comment.replies && comment.replies.length > 0;
 
   return (
-    <div className="ml-6 mt-2 border-l-2 border-gray-200 pl-4">
-      <div className="bg-white rounded-lg p-3">
+    <div className="ml-2 md:ml-6 mt-2 border-l-2 border-blue-200 pl-2 md:pl-4 animate-fade-in">
+      <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-300">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-              <span className="font-medium text-gray-900">{comment.author.username}</span>
-              <span>•</span>
-              <span>{new Date(comment.created).toLocaleString()}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600 mb-2 flex-wrap">
+              <span className="font-semibold text-gray-900 break-anywhere">{comment.author.username}</span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-500">{new Date(comment.created).toLocaleString()}</span>
             </div>
             
-            <p className="text-gray-800 mb-2">{comment.content}</p>
+            <p className="text-gray-800 mb-3 text-sm md:text-base leading-relaxed break-anywhere">{comment.content}</p>
             
-            <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-3 md:gap-4 text-xs md:text-sm flex-wrap">
               <button
                 onClick={handleLike}
                 disabled={isLiking}
-                className="flex items-center gap-1 text-gray-600 hover:text-blue-600 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:from-blue-100 hover:to-blue-200 hover:scale-105 active:scale-95 transition-all duration-200 font-medium shadow-sm"
               >
-                <span>👍</span>
+                <span className="text-base">👍</span>
                 <span>{localLikeCount}</span>
               </button>
               
               <button
                 onClick={() => setShowReplyForm(!showReplyForm)}
-                className="text-gray-600 hover:text-blue-600 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-50 to-purple-100 text-purple-600 hover:from-purple-100 hover:to-purple-200 hover:scale-105 active:scale-95 transition-all duration-200 font-medium shadow-sm"
               >
-                Reply
+                💬 Reply
               </button>
 
               {hasReplies && (
                 <button
                   onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 hover:from-gray-100 hover:to-gray-200 hover:scale-105 active:scale-95 transition-all duration-200 font-medium shadow-sm"
                 >
-                  {isCollapsed ? `Show ${comment.replies.length} replies` : 'Hide replies'}
+                  {isCollapsed ? `👁️ Show ${comment.replies.length}` : '🔽 Hide'}
                 </button>
               )}
             </div>
@@ -81,25 +81,25 @@ function Comment({ comment, onCommentAdded }) {
         </div>
 
         {showReplyForm && (
-          <form onSubmit={handleReply} className="mt-3">
+          <form onSubmit={handleReply} className="mt-4 animate-slide-up">
             <textarea
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               placeholder="Write a reply..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows="2"
+              className="input-modern resize-none text-sm md:text-base"
+              rows="3"
             />
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-3 flex-wrap">
               <button
                 type="submit"
-                className="px-4 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="px-4 md:px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 hover:shadow-lg active:scale-95 transition-all duration-200 text-sm font-medium"
               >
                 Post Reply
               </button>
               <button
                 type="button"
                 onClick={() => setShowReplyForm(false)}
-                className="px-4 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                className="px-4 md:px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 active:scale-95 transition-all duration-200 text-sm font-medium"
               >
                 Cancel
               </button>
@@ -110,7 +110,7 @@ function Comment({ comment, onCommentAdded }) {
 
       {/* Nested replies */}
       {hasReplies && !isCollapsed && (
-        <div className="mt-1">
+        <div className="mt-2">
           {comment.replies.map((reply) => (
             <Comment
               key={reply.id}

@@ -40,7 +40,10 @@ function Feed() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-gray-500 text-lg">Loading posts...</div>
+        <div className="text-center animate-pulse-slow">
+          <div className="text-6xl mb-4">⏳</div>
+          <div className="text-gray-600 text-lg font-medium">Loading amazing posts...</div>
+        </div>
       </div>
     );
   }
@@ -48,35 +51,43 @@ function Feed() {
   return (
     <div>
       {/* Create post button */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+      <div className="card-elevated p-4 md:p-6 mb-6 animate-fade-in">
         {!showPostForm ? (
           <button
             onClick={() => setShowPostForm(true)}
-            className="w-full text-left px-4 py-3 bg-gray-100 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors"
+            className="w-full text-left px-4 md:px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-gray-500 hover:from-blue-50 hover:to-purple-50 hover:text-gray-700 hover:shadow-md transition-all duration-300 font-medium flex items-center gap-3 group"
           >
-            What's on your mind?
+            <span className="text-2xl group-hover:scale-110 transition-transform duration-200">💭</span>
+            <span className="text-base md:text-lg">What's on your mind?</span>
           </button>
         ) : (
-          <form onSubmit={handleCreatePost}>
-            <textarea
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              placeholder="What's on your mind?"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows="4"
-              autoFocus
-            />
-            <div className="flex gap-2 mt-3">
+          <form onSubmit={handleCreatePost} className="animate-scale-in">
+            <div className="mb-3">
+              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <span className="text-xl">✍️</span>
+                Share your thoughts
+              </label>
+              <textarea
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+                placeholder="What's on your mind? Share something interesting..."
+                className="input-modern resize-none text-sm md:text-base"
+                rows="5"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-2 md:gap-3 flex-wrap">
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="btn-primary text-sm md:text-base flex items-center gap-2"
               >
+                <span className="text-lg">🚀</span>
                 Post
               </button>
               <button
                 type="button"
                 onClick={() => setShowPostForm(false)}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                className="btn-outline text-sm md:text-base"
               >
                 Cancel
               </button>
@@ -87,8 +98,10 @@ function Feed() {
 
       {/* Posts list */}
       {posts.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">
-          No posts yet. Be the first to post!
+        <div className="card-elevated p-12 text-center animate-fade-in">
+          <div className="text-6xl mb-4">📝</div>
+          <div className="text-xl font-semibold text-gray-700 mb-2">No posts yet!</div>
+          <div className="text-gray-500">Be the first to share something amazing with the community.</div>
         </div>
       ) : (
         posts.map((post) => (
