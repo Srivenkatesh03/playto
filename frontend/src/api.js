@@ -1,14 +1,30 @@
 const API_BASE_URL = 'http://localhost:8000/api';
 
-// Helper function to get auth headers
+// Helper function to get CSRF token from cookies
+const getCookie = (name) => {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+};
+
+// Helper function to get auth headers with CSRF token
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('access_token');
   const headers = {
     'Content-Type': 'application/json',
   };
   
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  const csrfToken = getCookie('csrftoken');
+  if (csrfToken) {
+    headers['X-CSRFToken'] = csrfToken;
   }
   
   return headers;
@@ -18,7 +34,7 @@ const getAuthHeaders = () => {
 const handleResponse = async (response) => {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw { response: { data: error }, message: error.detail || 'Request failed' };
+    throw { response: { data: error }, message: error.detail || error.error || 'Request failed' };
   }
   return response.json();
 };
@@ -28,9 +44,8 @@ export const api = {
   async register(username, email, password, password2) {
     const response = await fetch(`${API_BASE_URL}/auth/register/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ username, email, password, password2 }),
     });
     return handleResponse(response);
@@ -39,10 +54,18 @@ export const api = {
   async login(username, password) {
     const response = await fetch(`${API_BASE_URL}/auth/login/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ username, password }),
+    });
+    return handleResponse(response);
+  },
+
+  async logout() {
+    const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      credentials: 'include',
     });
     return handleResponse(response);
   },
@@ -50,6 +73,7 @@ export const api = {
   async getCurrentUser() {
     const response = await fetch(`${API_BASE_URL}/auth/me/`, {
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     return handleResponse(response);
   },
@@ -58,6 +82,7 @@ export const api = {
   async getPosts() {
     const response = await fetch(`${API_BASE_URL}/posts/`, {
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     return response.json();
   },
@@ -65,6 +90,7 @@ export const api = {
   async getPost(id) {
     const response = await fetch(`${API_BASE_URL}/posts/${id}/`, {
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     return response.json();
   },
@@ -73,6 +99,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/posts/`, {
       method: 'POST',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ content }),
     });
     return handleResponse(response);
@@ -82,6 +109,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/posts/${postId}/`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ content }),
     });
     return handleResponse(response);
@@ -91,6 +119,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/posts/${postId}/`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     if (response.status === 204) {
       return { success: true };
@@ -102,6 +131,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/posts/${postId}/like/`, {
       method: 'POST',
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     return handleResponse(response);
   },
@@ -111,6 +141,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments/`, {
       method: 'POST',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ 
         content,
         post: postId,
@@ -124,6 +155,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/comments/${commentId}/`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ content }),
     });
     return handleResponse(response);
@@ -133,6 +165,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/comments/${commentId}/`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     if (response.status === 204) {
       return { success: true };
@@ -144,6 +177,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/comments/${commentId}/reply/`, {
       method: 'POST',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify({ content }),
     });
     return handleResponse(response);
@@ -153,6 +187,7 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/comments/${commentId}/like/`, {
       method: 'POST',
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     return handleResponse(response);
   },
@@ -161,6 +196,7 @@ export const api = {
   async getLeaderboard() {
     const response = await fetch(`${API_BASE_URL}/leaderboard/`, {
       headers: getAuthHeaders(),
+      credentials: 'include',
     });
     return response.json();
   },
