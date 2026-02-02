@@ -16,6 +16,20 @@ const getCookie = (name) => {
   return cookieValue;
 };
 
+// Initialize CSRF token
+const initCSRF = async () => {
+  try {
+    await fetch(`${API_BASE_URL}/auth/csrf/`, {
+      credentials: 'include',
+    });
+  } catch (error) {
+    console.error('Failed to initialize CSRF token:', error);
+  }
+};
+
+// Call once when module loads
+initCSRF();
+
 // Helper function to get auth headers with CSRF token
 const getAuthHeaders = () => {
   const headers = {

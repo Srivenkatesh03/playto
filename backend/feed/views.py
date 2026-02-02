@@ -261,6 +261,16 @@ class LeaderboardViewSet(viewsets.ViewSet):
         return Response(result)
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def csrf_token_view(request):
+    """
+    API endpoint to get CSRF token.
+    """
+    from django.middleware.csrf import get_token
+    return Response({'csrfToken': get_token(request)})
+
+
 class RegisterView(generics.CreateAPIView):
     """
     API endpoint for user registration.

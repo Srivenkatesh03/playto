@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       const userData = await api.getCurrentUser();
       setUser(userData);
     } catch (error) {
-      // User is not authenticated
+      // User is not authenticated (403/401 errors are expected)
       setUser(null);
     }
     setLoading(false);
