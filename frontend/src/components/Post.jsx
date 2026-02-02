@@ -63,7 +63,7 @@ function Post({ post, detailed = false, onUpdate }) {
       <p className="text-gray-800 mb-4 text-base md:text-lg leading-relaxed break-anywhere">{localPost.content}</p>
 
       {/* Post actions */}
-      <div className="flex items-center gap-3 md:gap-4 text-sm border-t border-gradient-to-r from-gray-100 to-gray-200 pt-4 flex-wrap">
+      <div className="flex items-center gap-3 md:gap-4 text-sm border-t border-gray-200 pt-4 flex-wrap">
         <button
           onClick={handleLike}
           disabled={isLiking}
@@ -112,7 +112,7 @@ function Post({ post, detailed = false, onUpdate }) {
 
       {/* Comments section (only in detailed view) */}
       {detailed && localPost.comments && localPost.comments.length > 0 && (
-        <div className="mt-6 border-t-2 border-gradient-to-r from-blue-100 via-purple-100 to-pink-100 pt-6">
+        <div className="mt-6 border-t-2 border-blue-200 pt-6">
           <h3 className="font-bold text-gray-900 mb-5 text-lg md:text-xl flex items-center gap-2">
             <span className="text-2xl">💭</span>
             Comments

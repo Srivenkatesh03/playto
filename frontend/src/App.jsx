@@ -34,7 +34,7 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-800 via-gray-900 to-black border-t-4 border-gradient-to-r from-blue-500 via-purple-500 to-pink-500 mt-12">
+      <footer className="bg-gradient-to-r from-gray-800 via-gray-900 to-black border-t-4 border-blue-500 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-3">

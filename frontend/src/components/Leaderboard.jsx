@@ -87,7 +87,7 @@ function Leaderboard() {
         </div>
       )}
 
-      <div className="mt-6 pt-4 border-t-2 border-gradient-to-r from-blue-100 via-purple-100 to-pink-100">
+      <div className="mt-6 pt-4 border-t-2 border-blue-200">
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-100">
           <p className="text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
             <span className="text-lg">💡</span>

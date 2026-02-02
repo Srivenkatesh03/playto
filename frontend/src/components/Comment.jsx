@@ -39,7 +39,7 @@ function Comment({ comment, onCommentAdded }) {
   const hasReplies = comment.replies && comment.replies.length > 0;
 
   return (
-    <div className="ml-2 md:ml-6 mt-2 border-l-2 border-gradient-to-b from-blue-200 to-purple-200 pl-2 md:pl-4 animate-fade-in">
+    <div className="ml-2 md:ml-6 mt-2 border-l-2 border-blue-200 pl-2 md:pl-4 animate-fade-in">
       <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-300">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
