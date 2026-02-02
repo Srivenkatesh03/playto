@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
 
-function Comment({ comment, onCommentAdded }) {
+function Comment({ comment, onCommentAdded, onUserAction }) {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -29,6 +29,11 @@ function Comment({ comment, onCommentAdded }) {
     try {
       const result = await api.likeComment(comment.id);
       setLocalLikeCount(result.like_count);
+      
+      // Trigger leaderboard refresh
+      if (onUserAction) {
+        onUserAction();
+      }
     } catch (error) {
       console.error('Error liking comment:', error);
     } finally {
@@ -116,6 +121,7 @@ function Comment({ comment, onCommentAdded }) {
               key={reply.id}
               comment={reply}
               onCommentAdded={onCommentAdded}
+              onUserAction={onUserAction}
             />
           ))}
         </div>

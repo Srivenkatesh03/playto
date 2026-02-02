@@ -1,12 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import Comment from './Comment';
 
-function Post({ post, detailed = false, onUpdate }) {
+function Post({ post, detailed = false, onUpdate, onUserAction }) {
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [commentContent, setCommentContent] = useState('');
   const [localPost, setLocalPost] = useState(post);
   const [isLiking, setIsLiking] = useState(false);
+  const navigate = useNavigate();
 
   const handleLike = async () => {
     if (isLiking) return;
@@ -15,6 +17,11 @@ function Post({ post, detailed = false, onUpdate }) {
     try {
       const result = await api.likePost(localPost.id);
       setLocalPost({ ...localPost, like_count: result.like_count });
+      
+      // Trigger leaderboard refresh
+      if (onUserAction) {
+        onUserAction();
+      }
     } catch (error) {
       console.error('Error liking post:', error);
     } finally {
@@ -52,6 +59,16 @@ function Post({ post, detailed = false, onUpdate }) {
     }
   };
 
+  const handleCommentClick = () => {
+    if (detailed) {
+      // In detailed view, toggle the comment form
+      setShowCommentForm(!showCommentForm);
+    } else {
+      // In feed view, navigate to detailed post page
+      navigate(`/posts/${localPost.id}`);
+    }
+  };
+
   return (
     <div className="card-elevated p-4 md:p-6 mb-6 animate-fade-in hover:scale-[1.01] transition-all duration-300">
       {/* Post header */}
@@ -80,7 +97,7 @@ function Post({ post, detailed = false, onUpdate }) {
         </button>
         
         <button
-          onClick={() => setShowCommentForm(!showCommentForm)}
+          onClick={handleCommentClick}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-50 to-purple-100 text-purple-600 hover:from-purple-100 hover:to-purple-200 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 font-semibold"
         >
           <span className="text-xl md:text-2xl">💬</span>
@@ -128,6 +145,7 @@ function Post({ post, detailed = false, onUpdate }) {
               key={comment.id}
               comment={comment}
               onCommentAdded={handleCommentAdded}
+              onUserAction={onUserAction}
             />
           ))}
         </div>
