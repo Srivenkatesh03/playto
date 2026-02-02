@@ -80,10 +80,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://playto_user:playto_pass@db:5432/playto_db',
-        conn_max_age=600
+        default='postgresql://playto_user:playto_pass@db:5432/playto_db'
     )
 }
+
 
 
 # Password validation
