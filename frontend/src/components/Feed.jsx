@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useAuth } from '../AuthContext';
 import Post from './Post';
 
 function Feed({ onUserAction }) {
@@ -7,6 +8,7 @@ function Feed({ onUserAction }) {
   const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
   const [showPostForm, setShowPostForm] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     fetchPosts();
@@ -34,7 +36,18 @@ function Feed({ onUserAction }) {
       fetchPosts(); // Refresh the feed
     } catch (error) {
       console.error('Error creating post:', error);
+      if (error.message.includes('401')) {
+        alert('Please login to create posts');
+      }
     }
+  };
+
+  const handleCreatePostClick = () => {
+    if (!isAuthenticated) {
+      alert('Please login to create posts');
+      return;
+    }
+    setShowPostForm(true);
   };
 
   if (loading) {
@@ -54,11 +67,13 @@ function Feed({ onUserAction }) {
       <div className="card-elevated p-4 md:p-6 mb-6 animate-fade-in">
         {!showPostForm ? (
           <button
-            onClick={() => setShowPostForm(true)}
+            onClick={handleCreatePostClick}
             className="w-full text-left px-4 md:px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-gray-500 hover:from-blue-50 hover:to-purple-50 hover:text-gray-700 hover:shadow-md transition-all duration-300 font-medium flex items-center gap-3 group"
           >
             <span className="text-2xl group-hover:scale-110 transition-transform duration-200">💭</span>
-            <span className="text-base md:text-lg">What's on your mind?</span>
+            <span className="text-base md:text-lg">
+              {isAuthenticated ? "What's on your mind?" : "Login to share your thoughts"}
+            </span>
           </button>
         ) : (
           <form onSubmit={handleCreatePost} className="animate-scale-in">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { useAuth } from '../AuthContext';
 import Comment from './Comment';
 
 function Post({ post, detailed = false, onUpdate, onUserAction }) {
@@ -8,10 +9,16 @@ function Post({ post, detailed = false, onUpdate, onUserAction }) {
   const [commentContent, setCommentContent] = useState('');
   const [localPost, setLocalPost] = useState(post);
   const [isLiking, setIsLiking] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(post.content);
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  const isAuthor = isAuthenticated && user && localPost.author.id === user.id;
+  const wasEdited = localPost.updated && new Date(localPost.updated) > new Date(localPost.created);
 
   const handleLike = async () => {
-    if (isLiking) return;
+    if (isLiking || !isAuthenticated) return;
     setIsLiking(true);
 
     try {
@@ -24,6 +31,9 @@ function Post({ post, detailed = false, onUpdate, onUserAction }) {
       }
     } catch (error) {
       console.error('Error liking post:', error);
+      if (error.message.includes('401')) {
+        alert('Please login to like posts');
+      }
     } finally {
       setIsLiking(false);
     }
@@ -31,7 +41,7 @@ function Post({ post, detailed = false, onUpdate, onUserAction }) {
 
   const handleComment = async (e) => {
     e.preventDefault();
-    if (!commentContent.trim()) return;
+    if (!commentContent.trim() || !isAuthenticated) return;
 
     try {
       await api.createComment(localPost.id, commentContent);
@@ -50,6 +60,41 @@ function Post({ post, detailed = false, onUpdate, onUserAction }) {
       }
     } catch (error) {
       console.error('Error posting comment:', error);
+      if (error.message.includes('401')) {
+        alert('Please login to comment');
+      }
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!editedContent.trim()) return;
+
+    try {
+      const updatedPost = await api.updatePost(localPost.id, editedContent);
+      setLocalPost({ ...localPost, content: updatedPost.content, updated: updatedPost.updated });
+      setIsEditing(false);
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('Error updating post:', error);
+      alert('Failed to update post');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+
+    try {
+      await api.deletePost(localPost.id);
+      if (detailed) {
+        navigate('/');
+      } else if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Failed to delete post');
     }
   };
 
@@ -60,6 +105,11 @@ function Post({ post, detailed = false, onUpdate, onUserAction }) {
   };
 
   const handleCommentClick = () => {
+    if (!isAuthenticated) {
+      alert('Please login to comment');
+      return;
+    }
+    
     if (detailed) {
       // In detailed view, toggle the comment form
       setShowCommentForm(!showCommentForm);
@@ -78,19 +128,68 @@ function Post({ post, detailed = false, onUpdate, onUserAction }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-gray-900 text-base md:text-lg break-anywhere">{localPost.author.username}</div>
-          <div className="text-xs md:text-sm text-gray-500">{new Date(localPost.created).toLocaleString()}</div>
+          <div className="text-xs md:text-sm text-gray-500">
+            {new Date(localPost.created).toLocaleString()}
+            {wasEdited && <span className="text-gray-400 ml-1">(edited)</span>}
+          </div>
         </div>
+        
+        {/* Edit/Delete buttons */}
+        {isAuthor && !isEditing && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setIsEditing(true);
+                setEditedContent(localPost.content);
+              }}
+              className="px-3 py-1.5 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200"
+            >
+              ✏️ Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-3 py-1.5 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200"
+            >
+              🗑️ Delete
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Post content */}
-      <p className="text-gray-800 mb-4 text-base md:text-lg leading-relaxed break-anywhere">{localPost.content}</p>
+      {/* Post content or edit form */}
+      {isEditing ? (
+        <div className="mb-4">
+          <textarea
+            value={editedContent}
+            onChange={(e) => setEditedContent(e.target.value)}
+            className="input-modern resize-none text-sm md:text-base"
+            rows="4"
+          />
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={handleEdit}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 text-sm font-medium"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 text-sm font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-gray-800 mb-4 text-base md:text-lg leading-relaxed break-anywhere">{localPost.content}</p>
+      )}
 
       {/* Post actions */}
       <div className="flex items-center gap-3 md:gap-4 text-sm border-t border-gray-200 pt-4 flex-wrap">
         <button
           onClick={handleLike}
-          disabled={isLiking}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:from-blue-100 hover:to-blue-200 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 font-semibold"
+          disabled={isLiking || !isAuthenticated}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 hover:from-blue-100 hover:to-blue-200 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200 font-semibold disabled:opacity-50"
         >
           <span className="text-xl md:text-2xl">👍</span>
           <span className="text-sm md:text-base">{localPost.like_count} Likes</span>
