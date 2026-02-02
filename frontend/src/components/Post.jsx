@@ -31,6 +31,12 @@ function Post({ post, detailed = false, onUpdate }) {
       setCommentContent('');
       setShowCommentForm(false);
       
+      // Update the comment count to reflect the new comment
+      setLocalPost({ 
+        ...localPost, 
+        comment_count: (localPost.comment_count || 0) + 1 
+      });
+      
       // Refresh post details if in detailed view
       if (detailed && onUpdate) {
         onUpdate();
